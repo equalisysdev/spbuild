@@ -2,6 +2,7 @@ use std::fs::exists;
 use std::path::Path;
 
 use crate::target::Target;
+
 fn detect_gcc_path() -> Option<String> {
     let gcc_path = Path::new("/usr/bin/gcc");
 
@@ -19,7 +20,7 @@ fn compile_target(target: Target) -> Result<(), &'static str> {
         target.name, gcc_path
     );
 
-    // Here you would add the actual compilation logic using GCC
+    //TODO: Add this on linux systems
 
     Ok(())
 }

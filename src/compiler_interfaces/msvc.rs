@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::env;
 
-use crate::target::*;
+use crate::project::Project;
 
 pub fn detect_msvc_path() -> Result<String, &'static str> {
 
@@ -63,7 +63,7 @@ fn link(files: &Vec<&Path>) -> Result<(), &'static str> {
     Ok(())
 }
 
-pub fn build_target(target: Target) -> Result<(), &'static str> {
+pub fn build_project(project: Project) -> Result<(), &'static str> {
 
     let paths = vec![
         Path::new("file1.o"),

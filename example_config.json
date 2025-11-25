@@ -1,0 +1,26 @@
+{
+  "projects": [
+    {
+      "name": "Project Alpha",
+      "version": "1.0.0",
+      "target_platforms": ["windows, macos, linux"],
+      "target_archs": ["x86, x64"],
+      "rel_path": "./alpha",
+      "dependencies": {
+        "libraryA": "^2.3.4",
+        "libraryB": "~1.2.0"
+      }
+    },
+    {
+      "name": "Project Beta",
+      "version": "2.1.0",
+      "targets": ["windows, linux"],
+      "target_archs": ["arm64"],
+      "rel_path": "./beta",
+      "dependencies": {
+        "libraryC": "3.0.0",
+        "libraryD": ">=4.5.0 <5.0.0"
+      }
+    }
+  ]
+}

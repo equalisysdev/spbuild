@@ -1,9 +1,9 @@
-use std::fs::exists;
+use std::fs::{self, exists, DirEntry, read_dir};
 use std::path::Path;
+use crate::compiler_interfaces::common::list_files;
+use crate::project::Project;
 
-use crate::target::Target;
-
-fn detect_gcc_path() -> Option<String> {
+pub fn detect_gcc_path() -> Option<String> {
     let gcc_path = Path::new("/usr/bin/gcc");
 
     if exists(gcc_path).expect("GCC path check failed") {
@@ -13,14 +13,17 @@ fn detect_gcc_path() -> Option<String> {
     }
 }
 
-fn compile_target(target: Target) -> Result<(), &'static str> {
+pub fn compile_project(project: Project) -> Result<(), &'static str> {
     let gcc_path = detect_gcc_path().ok_or("GCC compiler not found")?;
     println!(
-        "Compiling target: {} using GCC at {}",
-        target.name, gcc_path
+        "Compiling Project: {} using GCC at {}",
+        project.name, gcc_path
     );
-
-    //TODO: Add this on linux systems
-
+    
+    for source_file in list_files(project.rel_path.as_str()).unwrap() {
+                                              // PathBuf -> OsString -> String
+        println!("Compiling source file: {}", source_file.into_os_string().into_string().unwrap());
+        // Here you would normally invoke the GCC compiler with appropriate arguments
+    }
     Ok(())
 }

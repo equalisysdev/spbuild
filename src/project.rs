@@ -1,8 +1,12 @@
+use serde::Deserialize;
+
+#[derive(Deserialize)]
 pub enum Compilers {
     GCC,
     MSVC,
 }
 
+#[derive(Deserialize)]
 pub enum TargetArch {
     X86,
     X86_64,
@@ -10,35 +14,41 @@ pub enum TargetArch {
     ARM64,
 }
 
-pub enum TargetType {
+#[derive(Deserialize)]
+pub enum ProjectType {
     StaticLib,
     DynamicLib,
     Executable,
 }
-pub struct Target {
+
+#[derive(Deserialize)]
+pub struct Project {
     pub name: String,
     pub version: String,
-    pub target: TargetType,
+    pub target: ProjectType,
     pub target_arch: TargetArch,
+    pub rel_path: String,
     pub compiler: Compilers,
-    pub dependencies: Vec<Target>,
+    pub dependencies: Vec<String>,
 }
 
-impl Target {
+impl Project {
     pub fn new(
         name: &str,
         version: &str,
-        target: TargetType,
+        target: ProjectType,
         target_arch: TargetArch,
-        compiler: Compilers,
-        dependencies: Vec<Target>,
+        rel_path: String,
+        compilers: Compilers,
+        dependencies: Vec<String>,
     ) -> Self {
-        Target {
+        Project {
             name: name.to_string(),
             version: version.to_string(),
             target,
             target_arch,
-            compiler,
+            rel_path,
+            compiler: compilers,
             dependencies,
         }
     }

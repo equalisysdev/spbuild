@@ -20,15 +20,13 @@ pub fn parse_config(path: &Path) -> Result<Config, String> {
     if (&unserialized_string).is_err() {
         return Err(format!("Failed to read config file: {}", path.display()));
     }
-
-    //FIXME: When running this code, I get the following error:
-    /*
-     *   called `Result::unwrap()` on an `Err` value: Error("invalid type: map, expected a sequence", line: 9, column: 22)
-     *   note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
-     */
     
     // Result<String> -> String -> &str -> Config
-    let config: Config = serde_json::from_str(&unserialized_string.unwrap()).unwrap();
+    let contents = read_to_string(path)
+        .map_err(|e| format!("Failed to read config file `{}': {}", path.display(), e))?;
+
+    let config: Config = serde_json::from_str(&contents)
+        .map_err(|e| format!("Failed to parse config file `{}': {}", path.display(), e))?;
 
     Ok(config)
 }

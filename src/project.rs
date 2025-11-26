@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -9,7 +10,7 @@ pub enum Compilers {
 #[derive(Deserialize)]
 pub enum TargetArch {
     X86,
-    X86_64,
+    X64,
     ARM,
     ARM64,
 }
@@ -22,33 +23,36 @@ pub enum ProjectType {
 }
 
 #[derive(Deserialize)]
+pub struct Dependency {
+    pub name: String,
+    pub version: String,
+}
+
+#[derive(Deserialize)]
 pub struct Project {
     pub name: String,
     pub version: String,
-    pub target: ProjectType,
-    pub target_arch: TargetArch,
+    pub project_type: ProjectType,
+    pub target_archs: Vec<TargetArch>,
     pub rel_path: String,
-    pub compiler: Compilers,
-    pub dependencies: Vec<String>,
+    pub dependencies: HashMap<String, String>,
 }
 
 impl Project {
     pub fn new(
         name: &str,
         version: &str,
-        target: ProjectType,
-        target_arch: TargetArch,
+        project_type: ProjectType,
+        target_archs: Vec<TargetArch>,
         rel_path: String,
-        compilers: Compilers,
-        dependencies: Vec<String>,
+        dependencies: HashMap<String, String>,
     ) -> Self {
         Project {
             name: name.to_string(),
             version: version.to_string(),
-            target,
-            target_arch,
+            project_type,
+            target_archs,
             rel_path,
-            compiler: compilers,
             dependencies,
         }
     }

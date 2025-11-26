@@ -3,8 +3,16 @@
     {
       "name": "Project Alpha",
       "version": "1.0.0",
-      "target_platforms": ["windows, macos, linux"],
-      "target_archs": ["x86, x64"],
+      "project_type": "Executable",
+      "target_platforms": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "target_archs": [
+        "X86",
+        "X64"
+      ],
       "rel_path": "./alpha",
       "dependencies": {
         "libraryA": "^2.3.4",
@@ -14,8 +22,14 @@
     {
       "name": "Project Beta",
       "version": "2.1.0",
-      "targets": ["windows, linux"],
-      "target_archs": ["arm64"],
+      "project_type": "StaticLib",
+      "target_platforms": [
+        "windows",
+        "linux"
+      ],
+      "target_archs": [
+        "ARM64"
+      ],
       "rel_path": "./beta",
       "dependencies": {
         "libraryC": "3.0.0",

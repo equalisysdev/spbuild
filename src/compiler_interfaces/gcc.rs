@@ -16,7 +16,7 @@ pub fn detect_gcc_path() -> Option<String> {
 pub fn compile_project(project: Project) -> Result<(), &'static str> {
     let gcc_path = detect_gcc_path().ok_or("GCC compiler not found")?;
     println!(
-        "Compiling Project: {} using GCC at {}",
+        "=> Compiling Project: {} using GCC at {}",
         project.name, gcc_path
     );
     

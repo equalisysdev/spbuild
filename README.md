@@ -19,8 +19,15 @@ Here are some available options:
     - [ ] Single project application
     - [ ] Multi project application
   - [ ] Compile with GCC
-    - [ ] Single project application
+    - [x] Single project application
+    - [ ] Link
     - [ ] Multi project application
+    - [ ] Link
 - [ ] Incremental build support
 - [ ] Dependency and package manager (maybe ?)
 
+## Message to future me
+1. Write tests
+2. Test point number 1
+3. Use absolute paths everywhere
+4. Document everything

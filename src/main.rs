@@ -43,8 +43,8 @@ fn main() {
 
     if !config_path.is_file() {
         println!("> Specified path is not a file: {} <", config_path.display());
-        println!("using default configuration file: config.json\n");
-        config_path = config_path.join("config.json");
+        println!("using default configuration file: spbuild.json\n");
+        config_path = config_path.join("spbuild.json");
     }
     else {
         println!("Using configuration file: {}", &args.project_path);
@@ -62,13 +62,17 @@ fn main() {
         //TODO : Call msvc functions
     }
     else if current_platform == "linux" {
+        let working_dir = Path::new(&args.project_path).parent().unwrap().canonicalize().unwrap();
+        println!("Successfully changed working directory to {}!", working_dir.display());
+
         match config {
             Ok(cfg) => {
                 for project in cfg.projects {
-                    let res = compiler_interfaces::gcc::compile_project(project);
 
-                    if res.is_err(){
-                        eprintln!("Error compiling project: {:?}", res.err());
+                    let res = compiler_interfaces::gcc::compile_project(project, PathBuf::from(&args.project_path));
+
+                    if let Err(e) = res {
+                        eprintln!("Error compiling project: {}", e);
                     }
                 }
             }

@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -34,7 +35,7 @@ pub struct Project {
     pub version: String,
     pub project_type: ProjectType,
     pub target_archs: Vec<TargetArch>,
-    pub path: String,
+    pub path: PathBuf,
     pub dependencies: HashMap<String, String>,
 }
 
@@ -44,7 +45,7 @@ impl Project {
         version: &str,
         project_type: ProjectType,
         target_archs: Vec<TargetArch>,
-        path: String,
+        path: PathBuf,
         dependencies: HashMap<String, String>,
     ) -> Self {
         Project {

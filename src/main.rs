@@ -42,15 +42,15 @@ fn main() {
     }
 
     if !config_path.is_file() {
-        println!("Specified path is not a file: {}", config_path.display());
-        println!("using default configuration file: config.json");
+        println!("> Specified path is not a file: {} <", config_path.display());
+        println!("using default configuration file: config.json\n");
         config_path = config_path.join("config.json");
     }
-
+    else {
+        println!("Using configuration file: {}", &args.project_path);
+    }
 
     let config = parse_config(&config_path);
-
-    println!("Using configuration file: {}", &args.project_path);
 
     print!("Detecting platform... ");
     let current_platform = env::consts::OS;

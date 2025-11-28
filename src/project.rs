@@ -34,7 +34,7 @@ pub struct Project {
     pub version: String,
     pub project_type: ProjectType,
     pub target_archs: Vec<TargetArch>,
-    pub rel_path: String,
+    pub path: String,
     pub dependencies: HashMap<String, String>,
 }
 
@@ -44,7 +44,7 @@ impl Project {
         version: &str,
         project_type: ProjectType,
         target_archs: Vec<TargetArch>,
-        rel_path: String,
+        path: String,
         dependencies: HashMap<String, String>,
     ) -> Self {
         Project {
@@ -52,7 +52,7 @@ impl Project {
             version: version.to_string(),
             project_type,
             target_archs,
-            rel_path,
+            path,
             dependencies,
         }
     }

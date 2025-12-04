@@ -5,6 +5,7 @@ use std::path::PathBuf;
 
 use glob::glob;
 use serde_json::to_string;
+use crate::project::Project;
 
 fn _list_files(vec: &mut Vec<PathBuf>, path: PathBuf) -> io::Result<()> {
     if path.is_dir() {
@@ -35,4 +36,11 @@ pub fn list_files(path: &PathBuf) -> io::Result<Vec<PathBuf>> {
     //let path = path.into();
     //_list_files(&mut vec, path)?;
     Ok(vec)
+}
+
+// TRAITS DEFINITIONS
+pub trait Compiler {
+    fn compile_file(&self, source_dir: &Path, rel_file_path: &String) -> Result<(), &'static str>;
+    fn compile_project(&self, project: Project, project_path: PathBuf, working_dir: PathBuf) -> Result<(), &'static str>;
+    fn detect_compiler_path() -> Option<String>;
 }

@@ -3,6 +3,7 @@ mod config_parser;
 
 mod compiler_interfaces {
     pub mod common {
+        use std::path::Path;
         include!("compiler_interfaces/common.rs");
     }
     pub mod msvc {
@@ -20,6 +21,9 @@ use clap::Parser;
 
 use crate::project::Project;
 use crate::config_parser::{Config, parse_config};
+
+use crate::compiler_interfaces::common::Compiler;
+
 
 #[derive(Parser, Debug)]
 #[command( version, about, long_about = None)]
@@ -62,17 +66,22 @@ fn main() {
         //TODO : Call msvc functions
     }
     else if current_platform == "linux" {
-        let working_dir = Path::new(&args.project_path).parent().unwrap().canonicalize().unwrap();
-        println!("Successfully changed working directory to {}!", working_dir.display());
+        let working_dir = Path::new(&args.project_path).parent().unwrap();
 
         match config {
             Ok(cfg) => {
                 for project in cfg.projects {
+                    let compiler = compiler_interfaces::gcc::GccCompiler {
+                        gcc_path: compiler_interfaces::gcc::GccCompiler::detect_compiler_path().unwrap(),
+                    };
 
-                    let res = compiler_interfaces::gcc::compile_project(project, PathBuf::from(&args.project_path));
+                    let res = compiler.compile_project(project, PathBuf::from(&args.project_path), PathBuf::from(&working_dir));
 
                     if let Err(e) = res {
                         eprintln!("Error compiling project: {}", e);
+                    }
+                    else {
+                        println!("\n(!!) >> Project compiled successfully <<");
                     }
                 }
             }

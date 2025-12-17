@@ -24,10 +24,11 @@ Here are some available options:
     - [ ] Multi project application
     - [ ] Link
 - [ ] Incremental build support
-- [ ] Dependency and package manager (maybe ?)
+- [ ] Dependency and package manager (definitely)
 
 ## Message to future me
 1. Write tests
 2. Test point number 1
 3. Use absolute paths everywhere
+
 4. Document everything

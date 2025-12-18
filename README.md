@@ -11,7 +11,7 @@ spbuild build [OPTIONS]
 ```
 Here are some available options:
 - `-p`, `--project-path`: Path to the project config file (If folder passed, defaults to spbuild.json)
-- `-o`, `--output-path`: Path to the output folder (where the application is built)
+- `-o`, `--output-path`: Path to the output folder (where the application is built). Defaults to project-path/output
 
 ## TODO list
 - [ ] Compile a basic application

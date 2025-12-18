@@ -40,7 +40,7 @@ pub fn list_files(path: &PathBuf) -> io::Result<Vec<PathBuf>> {
 
 // TRAITS DEFINITIONS
 pub trait Compiler {
-    fn compile_file(&self, source_dir: &Path, rel_file_path: &String) -> Result<(), &'static str>;
+    fn compile_file(&self, source_dir: &Path, project_path: &String, rel_file_path: &String) -> Result<(), &'static str>;
     fn compile_project(&self, project: Project, project_path: PathBuf, working_dir: PathBuf) -> Result<(), &'static str>;
     fn detect_compiler_path() -> Option<String>;
 }

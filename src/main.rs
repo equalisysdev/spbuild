@@ -78,7 +78,7 @@ fn main() {
                     let res = compiler.compile_project(project, PathBuf::from(&args.project_path), PathBuf::from(&working_dir));
 
                     if let Err(e) = res {
-                        eprintln!("Error compiling project: {}", e);
+                        eprintln!("(??) Error compiling project: {}", e);
                     }
                     else {
                         println!("\n(!!) >> Project compiled successfully <<");

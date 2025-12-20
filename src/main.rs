@@ -26,11 +26,13 @@ use crate::compiler_interfaces::common::Compiler;
 
 
 #[derive(Parser, Debug)]
-#[command( version, about, long_about = None)]
+#[command(version, about, long_about = None)]
 struct Args {
-
     #[arg(short, long, help = "Path to the project configuration file")]
     project_path: String,
+
+    #[arg(short, long, action = clap::ArgAction::SetTrue, help = "Enable verbose output")]
+    verbose: bool,
 }
 
 fn main() {
@@ -66,7 +68,11 @@ fn main() {
         //TODO : Call msvc functions
     }
     else if current_platform == "linux" {
-        let working_dir = Path::new(&args.project_path).parent().unwrap();
+        // Use the directory containing the resolved config file, not the raw CLI arg.
+        let working_dir = config_path
+            .parent()
+            .expect("Config path has no parent")
+            .to_path_buf();
 
         match config {
             Ok(cfg) => {
@@ -75,13 +81,18 @@ fn main() {
                         gcc_path: compiler_interfaces::gcc::GccCompiler::detect_compiler_path().unwrap(),
                     };
 
-                    let res = compiler.compile_project(project, PathBuf::from(&args.project_path), PathBuf::from(&working_dir));
+                    let res = compiler.compile_project(
+                        project,
+                        config_path.clone(),
+                        working_dir.clone(),
+                        args.verbose,
+                    );
 
                     if let Err(e) = res {
                         eprintln!("(??) Error compiling project: {}", e);
                     }
                     else {
-                        println!("\n(!!) >> Project compiled successfully <<");
+                        println!("\n(!!) >> Project compiled successfully <<\n");
                     }
                 }
             }

@@ -10,7 +10,7 @@ To use, you only need to run
 spbuild build [OPTIONS]
 ```
 Here are some available options:
-- `-p`, `--project-path`: Path to the project config file (If folder passed, defaults to spbuild.json)
+- `-s`, `--solution-path`: Path to the project config file (If folder passed, defaults to spbuild.json)
 - `-o`, `--output-path`: Path to the output folder (where the application is built). Defaults to project-path/output
 
 ## Naming
@@ -41,14 +41,14 @@ Here are some available options:
     the solution, spbuild will look for it in the package manager (not implemented yet)
 
 ## TODO list
-- [ ] Compile a basic application
+- [ ] Compile a basic solution
   - [ ] Compile with MSVC
-    - [ ] Single project application
-    - [ ] Multi project application
+    - [ ] Single project solution
+    - [ ] Multi project solution
   - [ ] Compile with GCC
-    - [x] Single project application
+    - [x] Single project solution
     - [ ] Link
-    - [ ] Multi project application
+    - [ ] Multi project solution
     - [ ] Link
 - [ ] Incremental build support
 - [ ] Dependency and package manager (definitely)
@@ -57,5 +57,4 @@ Here are some available options:
 1. Write tests
 2. Test point number 1
 3. Use absolute paths everywhere
-
 4. Document everything

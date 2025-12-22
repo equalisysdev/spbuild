@@ -36,8 +36,8 @@ pub fn list_files(root: &PathBuf) -> io::Result<Vec<PathBuf>> {
 // TRAITS DEFINITIONS
 pub trait Compiler {
     fn compile_file(&self, source_dir: &Path, project_path: &String, rel_file_path: &String, verbose:bool) -> Result<(), &'static str>;
-    fn compile_project(&self, project: Project, project_path: PathBuf, working_dir: PathBuf, verbose:bool) -> Result<(), &'static str>;
-    fn link_project(&self, project: Project, project_path: PathBuf, verbose: bool)  -> Result<(), &'static str>;
+    fn compile_project(&self, project: &Project, project_path: PathBuf, working_dir: PathBuf, verbose:bool) -> Result<(), &'static str>;
+    fn link_project(&self, project: &Project, project_path: PathBuf, verbose: bool)  -> Result<(), &'static str>;
     fn detect_compiler_path() -> Option<String>;
 
     fn build_root_from_config_path(project_path: &str) -> Result<PathBuf, &'static str> {

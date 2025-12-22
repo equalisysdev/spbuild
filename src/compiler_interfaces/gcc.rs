@@ -13,6 +13,19 @@ use crate::solution::Project;
 
 pub struct GccCompiler {
     pub gcc_path: String,
+    pub gpp_path: String,
+}
+
+impl GccCompiler {
+    pub fn detect_gpp_path() -> Option<String> {
+        let gcc_path = Path::new("/usr/bin/g++");
+
+        if exists(gcc_path).expect("G++ path check failed") {
+            gcc_path.to_str().map(|s| s.to_string())
+        } else {
+            None
+        }
+    }
 }
 
 impl Compiler for GccCompiler {
@@ -85,7 +98,7 @@ impl Compiler for GccCompiler {
 
     fn compile_project(
         &self,
-        project: Project,
+        project: &Project,
         project_path: PathBuf,
         solution_root: PathBuf,
         _verbose: bool,
@@ -121,14 +134,11 @@ impl Compiler for GccCompiler {
         Ok(())
     }
 
-    fn link_project(&self, project: Project, project_path: PathBuf, verbose: bool) -> Result<(), &'static str> {
-        // Contract:
-        // - `project`: Project object
-        // - `project_path`: absolute path to directory containing config file (e.g. .../example_solution/)
+    fn link_project(&self, project: &Project, solution_root: PathBuf, verbose: bool) -> Result<(), &'static str> {
 
-        let build_root = Self::build_root_from_config_path(&project_path.to_string_lossy())?;
+        let build_root = Self::build_root_from_config_path(&solution_root.to_string_lossy())?;
 
-        let working_dir = &build_root.join(&project_path).join("output").join(&project.path);
+        let working_dir = &build_root.join("output").join(&project.path);
 
         let files = list_files(working_dir).map_err(|_| "Failed to list object files")?;
         let mut object_files: Vec<String> = Vec::new();
@@ -140,11 +150,17 @@ impl Compiler for GccCompiler {
             }
         }
 
-        // For project `alpha`, output executable is at `<project_root>/output/alpha/alpha.exe`.
-        let output_executable = build_root.join(format!("output/{}/{}.exe", &project.path.display(), &project.name));
+        if object_files.is_empty() {
+            Console::log_warning(format!("No object files were found in directory: {}. This may be unintended behavior", working_dir.display()).as_str());
+            return Ok(());  // Nothing to link, but not an error.
+        }
+
+
+        // For project `alpha`, output executable is at `<project_root>/output/alpha/alpha`.
+        let output_executable = build_root.join(format!("output/{}/{}", &project.path.display(), &project.name));
         Console::log_info(&format!("Linking executable: {}", output_executable.display()));
 
-        let mut command = Command::new(&self.gcc_path);
+        let mut command = Command::new(&self.gpp_path);
         command.current_dir(&build_root);
         for obj in &object_files {
             command.arg(obj);

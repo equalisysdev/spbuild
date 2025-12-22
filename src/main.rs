@@ -30,6 +30,7 @@ use crate::helpers::console::Console;
 use crate::config_parser::{parse_config};
 
 use crate::compiler_interfaces::common::Compiler;
+use crate::solution::Solution;
 
 
 #[derive(Parser, Debug)]
@@ -40,6 +41,54 @@ struct Args {
 
     #[arg(short, long, action = clap::ArgAction::SetTrue, help = "Enable verbose output")]
     verbose: bool,
+}
+
+
+fn linux_build(args: Args, config_path: PathBuf, config: Result<Solution, String>) {
+    let working_dir = config_path
+        .parent()
+        .expect("Config path has no parent")
+        .to_path_buf();
+
+    match config {
+        Ok(solution) => {
+            for project in solution.projects {
+                let compiler = compiler_interfaces::gcc::GccCompiler {
+                    gcc_path: compiler_interfaces::gcc::GccCompiler::detect_compiler_path().unwrap(),
+                    gpp_path: compiler_interfaces::gcc::GccCompiler::detect_gpp_path().unwrap(),
+                };
+
+                let res = compiler.compile_project(
+                    &project,
+                    config_path.clone(),
+                    working_dir.clone(),
+                    args.verbose,
+                );
+
+                if let Err(e) = res {
+                    Console::log_fatal(format!("Error compiling project: {}", e).as_str());
+                } else {
+                    Console::log_success("=== Project compiled successfully ===");
+                }
+
+                let res = compiler.link_project(
+                    &project,
+                    config_path.clone(),
+                    args.verbose,
+                );
+
+                if let Err(e) = res {
+                    Console::log_fatal(format!("Error linking project: {}\n", e).as_str());
+                } else {
+                    Console::log_success("=== Project linked successfully ===");
+                }
+            }
+        }
+        Err(e) => {
+            Console::log_fatal(format!("Failed to parse config: {}", e).as_str());
+            Console::log_fatal("==== Aborting build ====");
+        }
+    }
 }
 
 fn main() {
@@ -76,37 +125,6 @@ fn main() {
         //TODO : Call msvc functions
     }
     else if current_platform == "linux" {
-        // Use the directory containing the resolved config file, not the raw CLI arg.
-        let working_dir = config_path
-            .parent()
-            .expect("Config path has no parent")
-            .to_path_buf();
-
-        match config {
-            Ok(solution) => {
-                for project in solution.projects {
-                    let compiler = compiler_interfaces::gcc::GccCompiler {
-                        gcc_path: compiler_interfaces::gcc::GccCompiler::detect_compiler_path().unwrap(),
-                    };
-
-                    let res = compiler.compile_project(
-                        project,
-                        config_path.clone(),
-                        working_dir.clone(),
-                        args.verbose,
-                    );
-
-                    if let Err(e) = res {
-                        Console::log_fatal(format!("Error compiling project: {}", e).as_str());
-                    } else {
-                        Console::log_success("=== Project compiled successfully ===");
-                    }
-                }
-            }
-            Err(e) => {
-                Console::log_fatal(format!("Failed to parse config: {}", e).as_str());
-                Console::log_fatal("==== Aborting build ====");
-            }
-        }
+        linux_build(args, config_path, config);
     }
 }

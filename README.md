@@ -50,6 +50,7 @@ Here are some available options:
     - [ ] Link
     - [ ] Multi project solution
     - [ ] Link
+    - [ ] Cross compile (Linux -> Windows)
 - [ ] Incremental build support
 - [ ] Dependency and package manager (definitely)
 

@@ -13,6 +13,33 @@ Here are some available options:
 - `-p`, `--project-path`: Path to the project config file (If folder passed, defaults to spbuild.json)
 - `-o`, `--output-path`: Path to the output folder (where the application is built). Defaults to project-path/output
 
+## Naming
+- Project : A single target for the compiler (executable, library, etc.)
+- Solution : A collection of projects (like Visual Studio solutions)
+- Project's output directory : The directory where the compiled files of a single project are stored
+- Project source : The directory where the project's source code is located.. usually right next to spbuild.json
+- Solution root : The directory where spbuild.json is located
+
+### Project configuration file options
+- `name` : Name of the project. Can be any string
+- `version`: Version of the project. Can be any string
+- `project_type`: Type of the project. Can be one of the following:
+  - `Executable`: A standalone application
+  - `StaticLib`: A static library that can be linked to other projects
+  - `DynamicLib`: A dynamic library (like DLLs on Windows)
+- `target_archs`: List of target architectures. Can be any of the following:
+  - `X64`: 64-bit architecture
+  - `x86`: 32-bit architecture
+  - `ARM64`: ARM 64-bit architecture
+  - `ARM`: ARM 32-bit architecture
+- `target_platforms`: List of target platforms. Can be any of the following:
+  - `windows`: Microsoft Windows
+  - `linux`: Linux-based operating systems
+  - `macos`: Apple's MacOS
+- `path`: The path to the project folder (relative to the solution root)
+- `dependencies`: List of other projects that this project depends on (by name). If a dependency is not found in
+    the solution, spbuild will look for it in the package manager (not implemented yet)
+
 ## TODO list
 - [ ] Compile a basic application
   - [ ] Compile with MSVC

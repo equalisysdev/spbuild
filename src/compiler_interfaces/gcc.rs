@@ -2,53 +2,40 @@ use std::fs::{exists, create_dir_all};
 use std::path::{Path, PathBuf};
 
 use std::{io};
+use std::fmt::format;
 use std::io::Write;
 
 use std::process::Command;
 
 use crate::compiler_interfaces::common::{list_files, Compiler};
-use crate::project::Project;
+use crate::helpers::console::Console;
+use crate::solution::Project;
 
 pub struct GccCompiler {
     pub gcc_path: String,
 }
 
-impl GccCompiler {
-    fn build_root_from_config_path(project_path: &str) -> Result<PathBuf, &'static str> {
-        // `project_path` is the path passed from CLI (currently the config file path).
-        // Canonicalize so output paths are absolute and independent of current_dir.
-        let cfg = Path::new(project_path)
-            .canonicalize()
-            .map_err(|_| "Invalid project path")?;
-
-        cfg.parent()
-            .ok_or("Invalid project path")
-            .map(|p| p.to_path_buf())
-    }
-}
-
 impl Compiler for GccCompiler {
     fn compile_file(
         &self,
-        source_dir: &Path,
-        project_path: &String,
+        project_source: &Path,
+        solution_root: &String,
         rel_file_path: &String,
         _verbose: bool,
     ) -> Result<(), &'static str> {
         // Contract:
-        // - `source_dir`: absolute path to project sources (e.g. .../example_project/alpha)
-        // - `rel_file_path`: a path returned by `list_files`, currently relative to `source_dir` (e.g. ./main.c)
-        // - `project_path`: CLI arg (path to spbuild.json), used to locate build root
+        // - `rel_file_path`: The path to the file to compile. currently relative to `project_source` (e.g. ./main.c)
+        // Check the README for other naming details.
 
-        let build_root = Self::build_root_from_config_path(project_path)?;
+        let build_root = Self::build_root_from_config_path(solution_root)?;
 
-        // Put outputs next to the config by project (e.g. example_project/output/alpha/...).
-        let output_dir = build_root.join(format!("output/{}", source_dir.components().last().unwrap().as_os_str().to_string_lossy()));
+        // Put outputs next to the config by project (e.g. example_solution/output/alpha/...).
+        let output_dir = build_root.join(format!("output/{}", project_source.components().last().unwrap().as_os_str().to_string_lossy()));
         create_dir_all(&output_dir).map_err(|_| "Failed to create output directory")?;
 
-        if _verbose { println!("v- using output directory {}", output_dir.display()) }
+        Console::log_verbose(&format!("v- using output directory {}", output_dir.display()), _verbose);
 
-        let input_path = source_dir.join(rel_file_path);
+        let input_path = project_source.join(rel_file_path);
 
         // Preserve subdirs if `rel_file_path` contains them.
         let rel_path = Path::new(rel_file_path);
@@ -70,10 +57,9 @@ impl Compiler for GccCompiler {
             &self.gcc_path
         };
 
-        if _verbose {
-            println!("v- input:  {}", input_path.display());
-            println!("v- output: {}", output_path.display());
-        }
+        Console::log_verbose(&format!("input:  {}", input_path.display()), _verbose);
+        Console::log_verbose(&format!("output: {}", output_path.display()), _verbose);
+
 
         let output = Command::new(driver)
             .current_dir(&build_root)
@@ -84,15 +70,16 @@ impl Compiler for GccCompiler {
             .output()
             .map_err(|_| "Failed to execute GCC")?;
 
-        println!("status: {}", output.status);
+        Console::log_info(&format!("status: {}", output.status));
+
         io::stdout().write_all(&output.stdout).map_err(|_| "Failed to write to stdout")?;
         io::stderr().write_all(&output.stderr).map_err(|_| "Failed to write to stderr")?;
 
         if output.status.success() {
-            println!("(!) > Compiled successfully.");
+            Console::log_info(&format!(">> {} compiled successfully!", rel_file_path));
             Ok(())
         } else {
-            Err("(?) > Compilation failed.")
+            Err("Compilation failed.")
         }
     }
 
@@ -100,21 +87,22 @@ impl Compiler for GccCompiler {
         &self,
         project: Project,
         project_path: PathBuf,
-        working_dir: PathBuf,
+        solution_root: PathBuf,
         _verbose: bool,
     ) -> Result<(), &'static str> {
         let gcc_path = GccCompiler::detect_compiler_path().ok_or("GCC compiler not found on system")?;
 
-        println!(
-            "(.) >> Compiling Project: {} ({}) using GCC at {}\n",
+        Console::log_info(&format!(
+            "Compiling Project: {} version {} ({}) using GCC at {}\n",
             project.name,
+            project.version,
             project.path.display(),
             &gcc_path
-        );
+        ));
 
         // `working_dir` is the directory containing the config file.
         // `project.path` is a relative path inside that directory (e.g. ./alpha/)
-        let source_dir = working_dir
+        let source_dir = solution_root
             .join(&project.path)
             .canonicalize()
             .map_err(|_| "Project source directory not found")?;
@@ -126,11 +114,59 @@ impl Compiler for GccCompiler {
             let rel = source_file.to_string_lossy().into_owned();
             let project_path_str = project_path.to_string_lossy().into_owned();
 
-            println!("(.) > Compiling source file: {}", &rel);
+            Console::log_info(&format!("Compiling source file: {}", &rel));
             self.compile_file(&source_dir, &project_path_str, &rel, _verbose)?;
         }
 
         Ok(())
+    }
+
+    fn link_project(&self, project: Project, project_path: PathBuf, verbose: bool) -> Result<(), &'static str> {
+        // Contract:
+        // - `project`: Project object
+        // - `project_path`: absolute path to directory containing config file (e.g. .../example_solution/)
+
+        let build_root = Self::build_root_from_config_path(&project_path.to_string_lossy())?;
+
+        let working_dir = &build_root.join(&project_path).join("output").join(&project.path);
+
+        let files = list_files(working_dir).map_err(|_| "Failed to list object files")?;
+        let mut object_files: Vec<String> = Vec::new();
+        for file in files {
+            let ext = file.extension().and_then(|e| e.to_str()).unwrap_or("");
+            if ext.eq_ignore_ascii_case("o") {
+                let obj_path = working_dir.join(&file);
+                object_files.push(obj_path.to_string_lossy().into_owned());
+            }
+        }
+
+        // For project `alpha`, output executable is at `<project_root>/output/alpha/alpha.exe`.
+        let output_executable = build_root.join(format!("output/{}/{}.exe", &project.path.display(), &project.name));
+        Console::log_info(&format!("Linking executable: {}", output_executable.display()));
+
+        let mut command = Command::new(&self.gcc_path);
+        command.current_dir(&build_root);
+        for obj in &object_files {
+            command.arg(obj);
+        }
+        command.arg("-o").arg(&output_executable);
+
+        Console::log_verbose(&format!("Linking command: {:?}", command), verbose);
+
+        let output = command
+            .output()
+            .map_err(|_| "Failed to execute GCC for linking")?;
+
+        println!("status: {}", output.status);
+
+        io::stdout().write_all(&output.stdout).map_err(|_| "Failed to write to stdout")?;
+        io::stderr().write_all(&output.stderr).map_err(|_| "Failed to write to stderr")?;
+        if output.status.success() {
+            Console::log_success("Linked successfully.");
+            Ok(())
+        } else {
+            Err("Linking failed.")
+        }
     }
 
     fn detect_compiler_path() -> Option<String> {

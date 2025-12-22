@@ -3,12 +3,6 @@ use std::path::PathBuf;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub enum Compilers {
-    GCC,
-    MSVC,
-}
-
-#[derive(Deserialize)]
 pub enum TargetArch {
     X86,
     X64,
@@ -57,4 +51,10 @@ impl Project {
             dependencies,
         }
     }
+}
+
+#[derive(Deserialize)]
+pub struct Solution {
+    pub name: String,
+    pub projects: Vec<Project>,
 }

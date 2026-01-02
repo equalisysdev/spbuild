@@ -47,18 +47,19 @@ pub fn version_check(required_version: &str, provided_version: &str) -> bool {
             && minor_eq(clean_provided_version, clean_required_version)
 
     } else if modifier_a.eq(">") {                  // Greater than version
+        // provided_version must be strictly greater than required_version
         greater_than(clean_provided_version, clean_required_version)
 
     } else if modifier_a.eq("<") {                  // Less than version
-        !greater_than(clean_provided_version, clean_required_version)
-        // Less than is just the negation of greater than
+        // provided_version must be strictly less than required_version
+        greater_than(clean_required_version, clean_provided_version)
 
     } else if modifier_a.eq(">=") {                 // Greater than or equal to version
         greater_than(clean_provided_version.clone(), clean_required_version.clone())
             || clean_provided_version.eq(&clean_required_version)
 
     } else if modifier_a.eq("<=") {                 // Less than or equal to version
-        !greater_than(clean_provided_version.clone(), clean_required_version.clone())
+        greater_than(clean_required_version.clone(), clean_provided_version.clone())
             || clean_provided_version.eq(&clean_required_version)
 
     } else {                                              // Exact match required (same major, minor, and patch)
@@ -137,37 +138,37 @@ mod tests {
 
     #[test]
     fn greater_than() {
-        assert!(version_check(">1.2.3", "1.2.2"));
+        assert!(!version_check(">1.2.3", "1.2.2"));
         assert!(!version_check(">1.2.3", "1.2.3"));
-        assert!(!version_check(">1.2.3", "1.2.4"));
+        assert!(version_check(">1.2.3", "1.2.4"));
     }
 
     #[test]
     fn less_than() {
-        assert!(version_check("<1.2.3", "1.2.3"));
-        assert!(version_check("<1.2.3", "1.2.4"));
-        assert!(!version_check("<1.2.3", "1.2.2"));
+        assert!(!version_check("<1.2.3", "1.2.3"));
+        assert!(!version_check("<1.2.3", "1.2.4"));
+        assert!(version_check("<1.2.3", "1.2.2"));
     }
 
     #[test]
     fn greater_than_or_equal() {
         assert!(version_check(">=1.2.3", "1.2.3"));
-        assert!(version_check(">=1.2.3", "1.2.2"));
-        assert!(!version_check(">=1.2.3", "1.2.4"));
+        assert!(!version_check(">=1.2.3", "1.2.2"));
+        assert!(version_check(">=1.2.3", "1.2.4"));
     }
 
     #[test]
     fn less_than_or_equal() {
         assert!(version_check("<=1.2.3", "1.2.3"));
-        assert!(!version_check("<=1.2.3", "1.2.2"));
-        assert!(version_check("<=1.2.3", "1.2.4"));
+        assert!(version_check("<=1.2.3", "1.2.2"));
+        assert!(!version_check("<=1.2.3", "1.2.4"));
     }
 
     #[test]
     fn missing_majors_minors() {
         // greater_than() fills out missing parts with 0s
-        assert!(version_check(">1", "0.9.9"));
+        assert!(!version_check(">1", "0.9.9"));
         assert!(!version_check(">1", "1.0.0"));
-        assert!(!version_check(">1", "1.0.1"));
+        assert!(version_check(">1", "1.0.1"));
     }
 }

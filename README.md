@@ -11,14 +11,17 @@ spbuild build [OPTIONS]
 ```
 Here are some available options:
 - `-s`, `--solution-path`: Path to the project config file (If folder passed, defaults to spbuild.json)
-- `-o`, `--output-path`: Path to the output folder (where the application is built). Defaults to project-path/output
+
 
 ## Naming
 - Project : A single target for the compiler (executable, library, etc.)
+  - Project's output directory : The directory where the compiled files of a single project are stored
+  - Project source : The directory where the project's source code is located.. usually right next to spbuild.json
 - Solution : A collection of projects (like Visual Studio solutions)
-- Project's output directory : The directory where the compiled files of a single project are stored
-- Project source : The directory where the project's source code is located.. usually right next to spbuild.json
-- Solution root : The directory where spbuild.json is located
+  - Solution root : The directory where spbuild.json is located
+- Dependency : A project that another project depends on to compile
+  - Local dependency : A dependency that is part of the same solution
+  - External dependency : A dependency that is not part of the same solution (can be from the package manager)
 
 ### Project configuration file options
 - `name` : Name of the project. Can be any string
@@ -39,23 +42,34 @@ Here are some available options:
 - `path`: The path to the project folder (relative to the solution root)
 - `dependencies`: List of other projects that this project depends on (by name). If a dependency is not found in
     the solution, spbuild will look for it in the package manager (not implemented yet)
+  - Each dependency is an object with the following properties:
+    - `name`: Name of the dependency project
+    - `version`: Version of the dependency project
+    - `optional`: If true, the build will continue even if the dependency is not found
+- `additional_includes`: List of additional include directories (relative to the project path) that are NOT in any local dependency
 
 ## TODO list
 - [ ] Compile a basic solution
   - [ ] Compile with MSVC
     - [ ] Single project solution
     - [ ] Multi project solution
+    - [ ] Link
+    - [ ] Cross compile (Windows -> Linux)
   - [ ] Compile with GCC
     - [x] Single project solution
-    - [ ] Link
-    - [ ] Multi project solution
-    - [ ] Link
+    - [x] Link
+    - [x] Multi project solution
+    - [x] Link
     - [ ] Cross compile (Linux -> Windows)
 - [ ] Incremental build support
 - [ ] Dependency and package manager (definitely)
 
-## Message to future me
-1. Write tests
-2. Test point number 1
-3. Use absolute paths everywhere
-4. Document everything
+## Road to 1.0
+- 0.3: Cross compilation support, target architectures, target platforms
+- 0.4: More compiler support (Clang, MSVC) <- Cargo
+- 0.5: Incremental build support
+- 0.6: Cleanup, refactor, documentation
+- 0.7: Package manager and external dependencies
+- 0.8: Testing, bug fixing...
+- 0.9: Final Polish, prepare for release
+- 1.0: Release!

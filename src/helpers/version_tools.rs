@@ -16,19 +16,28 @@
 /// * `true` if the versions are equal, `false` otherwise.
 pub fn version_check(required_version: &str, provided_version: &str) -> bool {
 
-    let first_char = (&required_version.chars().next().unwrap().to_string().as_str()).parse::<i32>();
+    // Safely get the first character, if any
+    let mut chars_iter = required_version.chars();
+    let first_char_opt = chars_iter.next();
+    if first_char_opt.is_none() {
+        // Empty required_version cannot satisfy any constraint
+        return false;
+    }
+    let first_char = first_char_opt.unwrap();
+    let first_char_parse = first_char.to_string().parse::<i32>();
     let mut modifier_a: String = "==".to_string(); // Default to exact match
 
     // If changing the first character to an integer fails, it means it's not a digit
-    if first_char.is_err() {
+    if first_char_parse.is_err() {
         // Has modifier
-        modifier_a = required_version.chars().next().unwrap().to_string();
+        modifier_a = first_char.to_string();
 
         if modifier_a.eq(">") || modifier_a.eq("<") {
-            // Check for two character modifiers
-            let second_char = required_version.chars().nth(1).unwrap().to_string();
-            if second_char.eq("=") {
-                modifier_a.push_str(&second_char);
+            // Check for two character modifiers (e.g., ">=" or "<=") safely
+            if let Some(second_char) = chars_iter.next() {
+                if second_char.eq(&'=') {
+                    modifier_a.push(second_char);
+                }
             }
         }
     }

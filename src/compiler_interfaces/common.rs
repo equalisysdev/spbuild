@@ -1,26 +1,23 @@
-use std::io;
-use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-fn _list_files(vec: &mut Vec<PathBuf>, path: PathBuf) -> io::Result<()>  {
-    if path.is_dir() {
-        let paths = fs::read_dir(&path)?;
-        
-        // Checks recursively for files in subdirectories
-        for path_result in paths {
-            let full_path = path_result?.path();
-            _list_files(vec, full_path);
-        }
-    } else {
-        vec.push(path);
+use crate::solution::{Dependency, Project, Solution};
+
+// TRAITS DEFINITIONS
+pub trait Compiler {
+    fn compile_file(&self, abs_infile_path: &PathBuf, abs_output_path: &PathBuf, additional_includes: &Vec<PathBuf>, verbose:bool) -> Result<(), &'static str>;
+    fn compile_project(&self, project: &Project, solution: &Solution, solution_root: &PathBuf, additional_include_directories: Vec<PathBuf>, verbose:bool) -> Result<(), &'static str>;
+    fn link_project(&self, project: &Project, solution: &Solution, project_path: &PathBuf, includes_paths: Vec<PathBuf>, verbose: bool)  -> Result<(), &'static str>;
+    fn detect_compiler_path() -> Option<String>;
+
+    fn build_root_from_config_path(project_path: &str) -> Result<PathBuf, &'static str> {
+        // `project_path` is the path passed from CLI (currently the config file path).
+        // Canonicalize so output paths are absolute and independent of current_dir.
+        let cfg = Path::new(project_path)
+            .canonicalize()
+            .map_err(|_| "Invalid project path")?;
+
+        cfg.parent()
+            .ok_or("Invalid project path")
+            .map(|p| p.to_path_buf())
     }
-    Ok(())
-}
-
-// Public function to list all files in a directory and its subdirectories
-pub fn list_files<T: Into<PathBuf>>(path: T) -> io::Result<Vec<PathBuf>> {
-    let mut vec = Vec::new();
-    let path = path.into();
-    _list_files(&mut vec, path);
-    Ok(vec)
 }

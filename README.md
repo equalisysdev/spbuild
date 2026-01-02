@@ -10,17 +10,66 @@ To use, you only need to run
 spbuild build [OPTIONS]
 ```
 Here are some available options:
-- `-p`, `--project-path`: Path to the project config file (If folder passed, defaults to spbuild.json)
-- `-o`, `--output-path`: Path to the output folder (where the application is built)
+- `-s`, `--solution-path`: Path to the project config file (If folder passed, defaults to spbuild.json)
+
+
+## Naming
+- Project : A single target for the compiler (executable, library, etc.)
+  - Project's output directory : The directory where the compiled files of a single project are stored
+  - Project source : The directory where the project's source code is located.. usually right next to spbuild.json
+- Solution : A collection of projects (like Visual Studio solutions)
+  - Solution root : The directory where spbuild.json is located
+- Dependency : A project that another project depends on to compile
+  - Local dependency : A dependency that is part of the same solution
+  - External dependency : A dependency that is not part of the same solution (can be from the package manager)
+
+### Project configuration file options
+- `name` : Name of the project. Can be any string
+- `version`: Version of the project. Can be any string
+- `project_type`: Type of the project. Can be one of the following:
+  - `Executable`: A standalone application
+  - `StaticLib`: A static library that can be linked to other projects
+  - `DynamicLib`: A dynamic library (like DLLs on Windows)
+- `target_archs`: List of target architectures. Can be any of the following:
+  - `X64`: 64-bit architecture
+  - `x86`: 32-bit architecture
+  - `ARM64`: ARM 64-bit architecture
+  - `ARM`: ARM 32-bit architecture
+- `target_platforms`: List of target platforms. Can be any of the following:
+  - `windows`: Microsoft Windows
+  - `linux`: Linux-based operating systems
+  - `macos`: Apple's MacOS
+- `path`: The path to the project folder (relative to the solution root)
+- `dependencies`: List of other projects that this project depends on (by name). If a dependency is not found in
+    the solution, spbuild will look for it in the package manager (not implemented yet)
+  - Each dependency is an object with the following properties:
+    - `name`: Name of the dependency project
+    - `version`: Version of the dependency project
+    - `optional`: If true, the build will continue even if the dependency is not found
+- `additional_includes`: List of additional include directories (relative to the project path) that are NOT in any local dependency
 
 ## TODO list
-- [ ] Compile a basic application
+- [ ] Compile a basic solution
   - [ ] Compile with MSVC
-    - [ ] Single project application
-    - [ ] Multi project application
+    - [ ] Single project solution
+    - [ ] Multi project solution
+    - [ ] Link
+    - [ ] Cross compile (Windows -> Linux)
   - [ ] Compile with GCC
-    - [ ] Single project application
-    - [ ] Multi project application
+    - [x] Single project solution
+    - [x] Link
+    - [x] Multi project solution
+    - [x] Link
+    - [ ] Cross compile (Linux -> Windows)
 - [ ] Incremental build support
-- [ ] Dependency and package manager (maybe ?)
+- [ ] Dependency and package manager (definitely)
 
+## Road to 1.0
+- 0.3: Cross compilation support, target architectures, target platforms
+- 0.4: More compiler support (Clang, MSVC) <- Cargo
+- 0.5: Incremental build support
+- 0.6: Cleanup, refactor, documentation
+- 0.7: Package manager and external dependencies
+- 0.8: Testing, bug fixing...
+- 0.9: Final Polish, prepare for release
+- 1.0: Release!

@@ -1,13 +1,21 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub enum Compilers {
-    GCC,
-    MSVC,
+pub struct Solution {
+    pub name: String,
+    pub projects: Vec<Project>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Eq, PartialEq, Clone)]
+pub enum ProjectType {
+    StaticLib,
+    DynamicLib,
+    Executable,
+}
+
+#[derive(Deserialize, Clone)]
 pub enum TargetArch {
     X86,
     X64,
@@ -15,28 +23,26 @@ pub enum TargetArch {
     ARM64,
 }
 
-#[derive(Deserialize)]
-pub enum ProjectType {
-    StaticLib,
-    DynamicLib,
-    Executable,
-}
-
-#[derive(Deserialize)]
+// Implemented clone for Dependency to allow duplication when needed.
+// TODO: Find a way to not use that if possible.
+#[derive(Deserialize, Clone)]
 pub struct Dependency {
     pub name: String,
     pub version: String,
+    pub optional: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Project {
     pub name: String,
     pub version: String,
     pub project_type: ProjectType,
     pub target_archs: Vec<TargetArch>,
-    pub rel_path: String,
-    pub dependencies: HashMap<String, String>,
+    pub path: PathBuf,
+    pub dependencies: Vec<Dependency>,
+    pub additional_includes: Vec<PathBuf>,
 }
+
 
 impl Project {
     pub fn new(
@@ -44,16 +50,18 @@ impl Project {
         version: &str,
         project_type: ProjectType,
         target_archs: Vec<TargetArch>,
-        rel_path: String,
-        dependencies: HashMap<String, String>,
+        path: PathBuf,
+        dependencies: Vec<Dependency>,
+        additional_includes: Vec<PathBuf>,
     ) -> Self {
         Project {
             name: name.to_string(),
             version: version.to_string(),
             project_type,
             target_archs,
-            rel_path,
+            path,
             dependencies,
+            additional_includes,
         }
     }
 }

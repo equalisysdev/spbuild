@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::env;
 
-use crate::project::Project;
+use crate::solution::Project;
 
 pub fn detect_msvc_path() -> Result<String, &'static str> {
 

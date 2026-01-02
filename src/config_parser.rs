@@ -5,14 +5,9 @@ use std::fs::read_to_string;
 
 use serde::Deserialize;
 
-use crate::project::Project;
+use crate::solution::Solution;
 
-#[derive(Deserialize)]
-pub struct Config {
-    pub projects: Vec<Project>,
-}
-
-pub fn parse_config(path: &Path) -> Result<Config, String> {
+pub fn parse_config(path: &Path) -> Result<Solution, String> {
 
     let unserialized_string = read_to_string(path);
 
@@ -25,8 +20,8 @@ pub fn parse_config(path: &Path) -> Result<Config, String> {
     let contents = read_to_string(path)
         .map_err(|e| format!("Failed to read config file `{}': {}", path.display(), e))?;
 
-    let config: Config = serde_json::from_str(&contents)
+    let solution: Solution = serde_json::from_str(&contents)
         .map_err(|e| format!("Failed to parse config file `{}': {}", path.display(), e))?;
 
-    Ok(config)
+    Ok(solution)
 }

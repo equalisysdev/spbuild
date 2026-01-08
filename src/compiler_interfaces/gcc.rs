@@ -37,7 +37,13 @@ impl Compiler for GccCompiler {
         _verbose: bool,
     ) -> Result<(), &'static str> {
 
-        let abs_output_path = abs_output_dir.join(abs_infile_path.components().last().unwrap()).with_added_extension("o");
+        // Checks for edge cases I don't even know if they can happen
+        let last_component_abs_output_dir = abs_infile_path.components().last();
+        if last_component_abs_output_dir.is_none() {
+            return Err("Invalid input file path");
+        }
+
+        let abs_output_path = abs_output_dir.join(last_component_abs_output_dir.unwrap()).with_added_extension("o");
 
         // Check extension
         if abs_infile_path.extension() != Some(std::ffi::OsStr::new("c")) &&
@@ -66,8 +72,8 @@ impl Compiler for GccCompiler {
         Console::log_verbose(&format!("input:  {}", abs_infile_path.display()), _verbose);
         Console::log_verbose(&format!("output: {}", abs_output_path.display()), _verbose);
 
+        // Crafts the command
         let mut command = Command::new(driver);
-
         command
             .current_dir(&abs_output_dir)
             .arg("-c")
@@ -80,6 +86,7 @@ impl Compiler for GccCompiler {
             command.arg("-I").arg(include_path);
         }
 
+        // Executes the command
         let output = command
             .output()
             .map_err(|_| "Failed to execute GCC")?;
@@ -101,7 +108,7 @@ impl Compiler for GccCompiler {
     fn compile_project(
         &self,
         project: &Project,
-        solution: &Solution,
+        solution: &Solution, // Will probably be used
         solution_root: &PathBuf,
         include_directories: Vec<PathBuf>,
         _verbose: bool,
@@ -133,6 +140,7 @@ impl Compiler for GccCompiler {
             .join("output")
             .join(&project.path);
 
+
         if !exists(rel_output_dir).unwrap_or(false) {
             // Creates output directory if it doesn't exist
             Console::log_verbose(&format!("Project output directory not found: {}", project.path.display()), _verbose);
@@ -163,7 +171,7 @@ impl Compiler for GccCompiler {
 
     fn link_project(
         &self, project: &Project,
-        solution: &Solution,
+        solution: &Solution, // Will probably be used
         solution_root: &PathBuf,
         includes_paths: Vec<PathBuf>,
         _verbose: bool) -> Result<(), &'static str> {
@@ -174,11 +182,8 @@ impl Compiler for GccCompiler {
             return Ok(());
         }
 
-        // Absolute path to the project's source code
-        let abs_project_path = &solution_root.join(&project.path).canonicalize().map_err(|e| {"Project Path not found"})?;
-
         // Absolute path to the project's output directory containing object files.
-        let abs_project_output_path = &solution_root.join("output").join(&project.path).canonicalize().map_err(|e| {"Project Output Path not found"})?;
+        let abs_project_output_path = &solution_root.join("output").join(&project.path).canonicalize().map_err(|_| {"Project Output Path not found"})?;
         let files = list_files(&abs_project_output_path).map_err(|_| "Failed to list object files")?;
 
         // Project's object files

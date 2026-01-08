@@ -65,8 +65,8 @@ Here are some available options:
 - [ ] Dependency and package manager (definitely)
 
 ## Road to 1.0
-- 0.2: Simple GCC.. Set the groundwork <- Latest
-  - 0.2.1: Fix strange documentation, add a bit more error handling
+- 0.2: Simple GCC.. Set the groundwork 
+  - 0.2.1: Fix strange documentation, add a bit more error handling <- Latest
 - 0.3: Cross compilation support, target architectures, target platforms
 - 0.4: More compiler support (Clang, MSVC) <- First Prerelease
 - 0.5: Incremental build support
@@ -74,4 +74,5 @@ Here are some available options:
 - 0.7: Package manager and external dependencies
 - 0.8: Testing, bug fixing...
 - 0.9: Final Polish, prepare for release
+
 - 1.0: Release!

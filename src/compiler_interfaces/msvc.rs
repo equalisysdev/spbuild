@@ -5,6 +5,13 @@ use std::env;
 
 use crate::solution::Project;
 
+// ======== IMPORTANT INFO ABOUT THIS FILE =======
+// This file is only a placeholder for real implementation of the MSVC compiler..
+// All the `noinspection RsLiveness` and `noinspection RsExternalLinter` clauses will be removed when working on MSVC compilation
+// ===============================================
+
+
+//noinspection RsExternalLinter
 pub fn detect_msvc_path() -> Result<String, &'static str> {
 
     // Using vswhere to locate latest Visual Studio installation
@@ -53,16 +60,22 @@ pub fn detect_msvc_path() -> Result<String, &'static str> {
     }
 }
 
+//noinspection RsExternalLinter
+//noinspection RsLiveness
 fn compile(path: &Path) -> Result<(), &'static str> {
 
     Ok(())
 }
 
+//noinspection RsExternalLinter
+//noinspection RsLiveness
 fn link(files: &Vec<&Path>) -> Result<(), &'static str> {
 
     Ok(())
 }
 
+//noinspection RsExternalLinter
+//noinspection RsLiveness
 pub fn build_project(project: Project) -> Result<(), &'static str> {
 
     let paths = vec![

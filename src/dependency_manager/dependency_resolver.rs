@@ -1,3 +1,4 @@
+use std::fs::create_dir_all;
 use std::path::PathBuf;
 use crate::solution::{Project, Solution};
 use crate::Console;
@@ -78,9 +79,9 @@ pub fn has_circular_dependency(project: &Project, solution: &Solution, visited: 
     false
 }
 
-pub fn find_headers_in_folder(folder: PathBuf) -> Vec<std::path::PathBuf> {
+pub fn find_headers_in_folder(folder: PathBuf) -> Vec<PathBuf> {
 
-    let mut header_paths: Vec<std::path::PathBuf> = Vec::new();
+    let mut header_paths: Vec<PathBuf> = Vec::new();
 
     let files = crate::helpers::file_tools::list_files(&folder);
 
@@ -195,17 +196,37 @@ pub fn resolve_project_build_inputs(
     for dep in &local_deps_in_order {
         let dep_root = solution_root
             .join(&dep.path)
-            .canonicalize()
-            .map_err(|_| "Dependency project source directory not found")?;
-        include_dirs.push(dep_root);
+            .canonicalize();
+
+
+        if dep_root.is_err(){
+            Console::log_fatal("Failed to locate dependency source directory");
+        }
+        include_dirs.push(dep_root.unwrap());
 
         // Dependency objects are placed in `<solution_root>/output/<dep.path>` by the compiler backend.
         // Canonicalize so link inputs are absolute.
         let abs_dep_output_dir = solution_root
             .join("output")
             .join(&dep.path)
+            .canonicalize();
+
+        if abs_dep_output_dir.is_err() {
+            create_dir_all(
+                solution_root
+                    .join("output")
+                    .join(&dep.path)
+            )
+                .map_err(|_| "Failed to create dependency output directory")?;
+        }
+
+        // checks if there is still an error after creating the directories
+        let abs_dep_output_dir = solution_root
+            .join("output")
+            .join(&dep.path)
             .canonicalize()
-            .map_err(|_| "Dependency output directory not found")?;
+            .map_err(|_| "Failed to create dependency output directory")?;
+
         dep_output_dirs.push(abs_dep_output_dir);
     }
 

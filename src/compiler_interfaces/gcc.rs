@@ -32,7 +32,7 @@ impl GccCompiler {
         let gpp_path = bin_path.join(format!("{target_spec}-g++"));
         let mut ld_path: PathBuf = bin_path.to_path_buf();
 
-        if t_platform == "windows" {
+        if t_platform == "w64-mingw32" {
             ld_path = bin_path.join(format!("{}-ld", target_spec));
         } else {
             ld_path = bin_path.join("ld");

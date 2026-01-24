@@ -20,7 +20,7 @@ The default compiler for linux is GCC so you will need to install cross-compiler
 
 If you also want to target different architectures, you will need to install the appropriate cross-compilers.
 - For ARM targets, install `aarch64-linux-gnu-gcc` (on Arch, `sudo yay -S aarch64-linux-gnu-gcc`)
-- For 32-bit targets, install `gcc-multilib` (on Arch, `sudo yay -S gcc-multilib`)
+- For 32-bit targets, install `gcc-multilib`, `gcc-libc` and (on Arch, `sudo pacman -S lib32-gcc-libc lib32-glibc`)
 - For RISC-V targets, install `riscv64-elf-gcc` (on Arch, `sudo yay -S riscv64-elf-gcc`)
 
 ## Naming
@@ -86,3 +86,4 @@ If you also want to target different architectures, you will need to install the
 - 0.9: Final Polish, prepare for release
 
 - 1.0: Release!
+

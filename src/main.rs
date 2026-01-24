@@ -217,9 +217,12 @@ fn main() {
 
     Console::log_info("===== SPBuild Starting =====");
 
-    config_path = config_file_check(&config_path).unwrap_or_else(|_| {
-        std::process::exit(1);
-    });
+    config_path = match config_file_check(&config_path) {
+        Ok(path) => path,
+        Err(_) => {
+            std::process::exit(1);
+        }
+    };
 
     let config = parse_config(&config_path).map_err(|e| {
         Console::log_fatal(format!("Failed to parse config: {}", e).as_str());

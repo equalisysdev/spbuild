@@ -10,7 +10,7 @@ use crate::helpers::console::Console;
 use crate::helpers::file_tools::*;
 
 use crate::solution::{Project, ProjectType, Solution};
-use crate::target::{Architecture, Platform, Target};
+use crate::target::{Architecture, Platform};
 
 
 pub struct GccCompiler {

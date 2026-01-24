@@ -1,5 +1,6 @@
 mod solution;
 mod config_parser;
+mod target;
 
 mod compiler_interfaces {
     pub mod common {
@@ -37,13 +38,17 @@ use std::env;
 use std::path::{PathBuf};
 use clap::Parser;
 
+// Basic helpers
 use crate::helpers::console::Console;
-
 use crate::config_parser::{parse_config};
 
+// Compilation helpers
 use crate::compiler_interfaces::common::Compiler;
 use crate::dependency_manager::local_resolve::{has_circular_dependency, resolve_project_build_inputs};
-use crate::solution::Solution;
+
+// Structs
+use crate::solution::{Solution};
+use crate::target::{Architecture, Platform};
 
 
 #[derive(Parser, Debug)]
@@ -52,13 +57,44 @@ struct Args {
     #[arg(short, long, help = "Path to the solution configuration file")]
     solution_path: String,
 
+    #[arg(short, long, help = "The target platform for the build (e.g., linux, windows). Defaults to the current platform if not specified.")]
+    platform: Option<String>,
+
+    #[arg(short, long, help = "The target architecture for the build (e.g., x86, x64, arm, arm64). Defaults to the current architecture if not specified.")]
+    architecture: Option<String>,
+
     #[arg(short, long, action = clap::ArgAction::SetTrue, help = "Enable verbose output")]
     verbose: bool,
 }
 
+fn config_file_check(config_path: &PathBuf) -> Result<PathBuf, String> {
+    // Config file checks
+    if !config_path.exists() {
+        Console::log_fatal(format!("Configuration file not found: {}", config_path.display()).as_str());
+
+        // Case config not found
+        return Err("Configuration file not found".to_string());
+    }
+
+    if !config_path.is_file() {
+        Console::log_warning(format!("Specified path is not a file: {}", config_path.display()).as_str());
+        Console::log_warning("using default configuration file: spbuild.json\n");
+
+        // Case path is not a file..
+        //TODO: Check if the file exists in that folder?
+        Ok(config_path.join("spbuild.json"))
+    }
+    else {
+        Console::log_info(format!("Using solution configuration file: {}", &config_path.display()).as_str());
+
+        // Case path is a file
+        Ok(config_path.to_path_buf())
+    }
+}
+
 
 //noinspection D
-fn linux_build(args: Args, config_path: PathBuf, solution: Solution) {
+fn linux_build(args: Args, config_path: PathBuf, solution: Solution, target_arch: Architecture, target_platform: Platform) -> Result<(), ()> {
     let working_dir = config_path
         .parent()
         .expect("Config path has no parent")
@@ -69,18 +105,32 @@ fn linux_build(args: Args, config_path: PathBuf, solution: Solution) {
     // Track what we've already compiled to avoid rebuilding the same dependency multiple times.
     let mut compiled_projects: Vec<String> = Vec::new();
 
+
+    // Validate that all projects support the target architecture and platform before starting the build.
     for project in &solution.projects {
-        let compiler = compiler_interfaces::gcc::GccCompiler {
-            gcc_path: compiler_interfaces::gcc::GccCompiler::detect_compiler_path().unwrap(),
-            gpp_path: compiler_interfaces::gcc::GccCompiler::detect_gpp_path().unwrap(),
-        };
+        // Check if the project supports the target architecture, platform..
+        if !project.target_archs.contains(&target_arch) {
+            Console::log_fatal(format!("Project {}: does not support target architecture {:?}", project.name, target_arch).as_str());
+            return Err(());
+        }
+        if !project.target_platforms.contains(&target_platform) {
+            Console::log_fatal(format!("Project {}: does not support target platform {:?}", project.name, target_platform).as_str());
+            return Err(());
+        }
+    }
+
+    // Compiles each project (but checks which ones are compiled tho)
+    for project in &solution.projects {
+
+        // Creates compiler for particular target
+        let compiler = compiler_interfaces::gcc::GccCompiler::new(target_arch.to_string(), target_platform.to_gcc_target_platform());
 
         // Resolve dependencies and include dirs.
         let inputs = match resolve_project_build_inputs(project, &solution, &working_dir, args.verbose) {
             Ok(v) => v,
             Err(e) => {
                 Console::log_fatal(format!("Error resolving dependencies: {}", e).as_str());
-                return;
+                return Err(());
             }
         };
 
@@ -92,7 +142,6 @@ fn linux_build(args: Args, config_path: PathBuf, solution: Solution) {
 
             let res = compiler.compile_project(
                 dep,
-                &solution,
                 &working_dir,
                 Vec::new(),
                 args.verbose,
@@ -100,7 +149,7 @@ fn linux_build(args: Args, config_path: PathBuf, solution: Solution) {
 
             if let Err(e) = res {
                 Console::log_fatal(format!("Error compiling dependency {}: {}", dep.name, e).as_str());
-                return;
+                return Err(());
             }
 
             let res = compiler.link_project(
@@ -113,7 +162,7 @@ fn linux_build(args: Args, config_path: PathBuf, solution: Solution) {
 
             if let Err(e) = res {
                 Console::log_fatal(format!("Error linking dependency {}: {}\n", dep.name, e).as_str());
-                return;
+                return Err(());
             }
 
             compiled_projects.push(dep.name.clone());
@@ -122,7 +171,6 @@ fn linux_build(args: Args, config_path: PathBuf, solution: Solution) {
         // Compile current project with resolved include dirs.
         let res = compiler.compile_project(
             &project,
-            &solution,
             &working_dir,
             inputs.include_dirs.clone(),
             args.verbose,
@@ -130,7 +178,7 @@ fn linux_build(args: Args, config_path: PathBuf, solution: Solution) {
 
         if let Err(e) = res {
             Console::log_fatal(format!("Error compiling project: {}", e).as_str());
-            return;
+            return Err(());
         } else {
             Console::log_success("=== Project compiled successfully ===");
         }
@@ -151,13 +199,15 @@ fn linux_build(args: Args, config_path: PathBuf, solution: Solution) {
 
         if let Err(e) = res {
             Console::log_fatal(format!("Error linking project: {}\n", e).as_str());
-            return;
+            return Err(());
         } else {
             Console::log_success("=== Project linked successfully ===");
         }
 
         compiled_projects.push(project.name.clone());
     }
+    Console::log_info("\n= BUILD COMPLETE =\n");
+    Ok(())
 }
 
 
@@ -167,30 +217,32 @@ fn main() {
 
     Console::log_info("===== SPBuild Starting =====");
 
-    if !config_path.exists() {
-        Console::log_fatal(format!("Configuration file not found: {}", config_path.display()).as_str());
-        return;
-    }
+    config_path = config_file_check(&config_path).unwrap();
 
-    if !config_path.is_file() {
-        Console::log_warning(format!("Specified path is not a file: {}", config_path.display()).as_str());
-        Console::log_warning("using default configuration file: spbuild.json\n");
-        config_path = config_path.join("spbuild.json");
-    }
-    else {
-        Console::log_info(format!("Using solution configuration file: {}", &args.solution_path).as_str());
-    }
     let config = parse_config(&config_path).map_err(|e| {
         Console::log_fatal(format!("Failed to parse config: {}", e).as_str());
         Console::log_fatal("==== Aborting build ====");
     }).unwrap();
 
 
-    Console::log_info("Detecting platform... ");
-    let current_platform = env::consts::OS;
-    Console::log_info(format!("{}!", &current_platform).as_str());
+    Console::log_info("Detecting platform and architecture... ");
+    let current_platform_str = env::consts::OS;
+    let current_arch_str = env::consts::ARCH;
+    Console::log_info(format!("Current platform/architecture: {}-{}", &current_platform_str, &current_arch_str).as_str());
 
     Console::log_info("\n= STARTING BUILD =\n");
+
+    // TODO: Detect using `gcc -dumpmachine` if linux, and `cl.exe` if windows for more accurate target platform/arch.
+    // String versions... For printing
+    let target_platform_string = args.platform.clone().unwrap_or_else(|| current_platform_str.to_string());
+    let target_architecture_string = args.architecture.clone().unwrap_or_else(|| current_arch_str.to_string());
+
+    // Enums versions... for actually useful things
+    let target_platform: Platform = Platform::new(&target_platform_string).unwrap();
+    let target_architecture: Architecture = Architecture::new(&target_architecture_string).unwrap();
+
+
+    Console::log_info(format!("Building for {}-{}", &target_platform_string, &target_architecture_string).as_str());
 
     for project in &config.projects {
         if has_circular_dependency(&project, &config, &mut Vec::new()) {
@@ -200,12 +252,17 @@ fn main() {
         }
     }
 
-    if current_platform == "windows" {
+    if current_platform_str == "windows" {
         Console::log_fatal("Windows platform detected. MSVC support is not yet implemented.");
         Console::log_fatal("==== Aborting build ====");
         //TODO : Call msvc functions
     }
-    else if current_platform == "linux" {
-        linux_build(args, config_path, config);
+
+    else if current_platform_str == "linux" {
+
+        if linux_build(args, config_path, config, target_architecture, target_platform).is_err(){
+            Console::log_fatal("==== Build failed ====");
+            return;
+        }
     }
 }

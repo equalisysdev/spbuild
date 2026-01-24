@@ -12,6 +12,16 @@ spbuild build [OPTIONS]
 Here are some available options:
 - `-s`, `--solution-path`: Path to the project config file (If folder passed, defaults to spbuild.json)
 
+## Compilation requirements
+### Linux
+The default compiler for linux is GCC so you will need to install cross-compilers if you want to compile for other platforms.
+- For Windows targets, install `mingw-w64` (on Arch, `sudo yay -S mingw-w64`)
+- MacOS targets are not supported yet on Linux
+
+If you also want to target different architectures, you will need to install the appropriate cross-compilers.
+- For ARM targets, install `aarch64-linux-gnu-gcc` (on Arch, `sudo yay -S aarch64-linux-gnu-gcc`)
+- For 32-bit targets, install `gcc-multilib` (on Arch, `sudo yay -S gcc-multilib`)
+- For RISC-V targets, install `riscv64-elf-gcc` (on Arch, `sudo yay -S riscv64-elf-gcc`)
 
 ## Naming
 - Project : A single target for the compiler (executable, library, etc.)

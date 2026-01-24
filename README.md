@@ -77,7 +77,7 @@ If you also want to target different architectures, you will need to install the
 ## Road to 1.0
 - 0.2: Simple GCC.. Set the groundwork 
   - 0.2.1: Fix strange documentation, add a bit more error handling <- Latest
-- 0.3: Cross compilation support, target architectures, target platforms
+- 0.3: Cross compilation support, target architectures, target platforms <- Dev branch
 - 0.4: More compiler support (Clang, MSVC) <- First Prerelease
 - 0.5: Incremental build support
 - 0.6: Cleanup, refactor, documentation
@@ -86,4 +86,5 @@ If you also want to target different architectures, you will need to install the
 - 0.9: Final Polish, prepare for release
 
 - 1.0: Release!
+
 

@@ -217,7 +217,9 @@ fn main() {
 
     Console::log_info("===== SPBuild Starting =====");
 
-    config_path = config_file_check(&config_path).unwrap();
+    config_path = config_file_check(&config_path).unwrap_or_else(|_| {
+        std::process::exit(1);
+    });
 
     let config = parse_config(&config_path).map_err(|e| {
         Console::log_fatal(format!("Failed to parse config: {}", e).as_str());
@@ -238,8 +240,35 @@ fn main() {
     let target_architecture_string = args.architecture.clone().unwrap_or_else(|| current_arch_str.to_string());
 
     // Enums versions... for actually useful things
-    let target_platform: Platform = Platform::new(&target_platform_string).unwrap();
-    let target_architecture: Architecture = Architecture::new(&target_architecture_string).unwrap();
+    let target_platform: Platform = match Platform::new(&target_platform_string) {
+        Ok(p) => p,
+        Err(e) => {
+            Console::log_fatal(
+                format!(
+                    "Invalid target platform '{}': {}",
+                    &target_platform_string, e
+                )
+                .as_str(),
+            );
+            Console::log_fatal("==== Aborting build ====");
+            std::process::exit(1);
+        }
+    };
+
+    let target_architecture: Architecture = match Architecture::new(&target_architecture_string) {
+        Ok(a) => a,
+        Err(e) => {
+            Console::log_fatal(
+                format!(
+                    "Invalid target architecture '{}': {}",
+                    &target_architecture_string, e
+                )
+                .as_str(),
+            );
+            Console::log_fatal("==== Aborting build ====");
+            std::process::exit(1);
+        }
+    };
 
 
     Console::log_info(format!("Building for {}-{}", &target_platform_string, &target_architecture_string).as_str());

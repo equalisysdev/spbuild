@@ -28,7 +28,7 @@ impl GccCompiler {
     pub fn new(t_arch: String, t_platform: String) -> Self {
         let target_spec = format!("{}-{}", t_arch, t_platform);
         let bin_path = Path::new("/usr/bin");
-        let gcc_path = bin_path.join(format!("{target_spec}-gcc"));
+        let mut gcc_path = bin_path.join(format!("{target_spec}-gcc"));
         let gpp_path = bin_path.join(format!("{target_spec}-g++"));
         let mut ld_path: PathBuf = bin_path.to_path_buf();
 
@@ -78,6 +78,7 @@ fn craft_gcc_command(
     // Crafts the command base
     let mut command = Command::new(driver);
 
+    // Special 32 bit scenario
     if is32bit {
         command.arg("-m32");
     }

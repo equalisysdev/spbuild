@@ -16,7 +16,7 @@ Here are some available options:
 ### Linux
 The default compiler for linux is GCC so you will need to install cross-compilers if you want to compile for other platforms.
 - For Windows targets, install `mingw-w64` (on Arch, `sudo yay -S mingw-w64`)
-- MacOS targets are not supported yet on Linux
+- For MacOS targets, cross compilation requires a bit more work and `osxcross`. Follow the instructions on their [GitHub page](https://github.com/tpoechtrager/osxcross) for gcc
 
 If you also want to target different architectures, you will need to install the appropriate cross-compilers.
 - For ARM targets, install `aarch64-linux-gnu-gcc` (on Arch, `sudo yay -S aarch64-linux-gnu-gcc`)
@@ -48,7 +48,7 @@ If you also want to target different architectures, you will need to install the
 - `target_platforms`: List of target platforms. Can be any of the following:
   - `windows`: Microsoft Windows
   - `linux`: Linux-based operating systems
-  - `macos`: Apple's MacOS
+  - `macos-25.2`: Apple's MacOS with Kernel version 25.2 (Needs additional configuration with osxcross)
 - `path`: The path to the project folder (relative to the solution root)
 - `dependencies`: List of other projects that this project depends on (by name). If a dependency is not found in
     the solution, spbuild will look for it in the package manager (not implemented yet)

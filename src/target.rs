@@ -24,9 +24,10 @@ pub enum Platform {
     Win,
     #[strum(serialize = "linux")]
     Linux,
-    //TODO: Enable MacOS support later
-    //#[strum(serialize = "macos")]
-    //MacOS,
+    #[strum(serialize = "macos-25.2")]
+    MacOS,
+
+    Unknown,
 }
 
 pub struct Target {
@@ -55,7 +56,8 @@ impl Platform {
         match self {
             Platform::Win => "windows".to_string(),
             Platform::Linux => "linux".to_string(),
-            //Platform::MacOS => "macos".to_string(),
+            Platform::MacOS => "macos".to_string(),
+            Platform::Unknown => "unknown".to_string(),
         }
     }
 
@@ -67,7 +69,8 @@ impl Platform {
         match self {
             Platform::Win => "w64-mingw32".to_string(),
             Platform::Linux => "linux-gnu".to_string(),
-            //Platform::MacOS => "apple-darwin".to_string(),
+            Platform::MacOS => "apple-darwin-25.2".to_string(),
+            Platform::Unknown => "unknown".to_string(),
         }
     }
 }

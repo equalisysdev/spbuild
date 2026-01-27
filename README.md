@@ -1,7 +1,7 @@
 # Single Player Build System (spbuild)
 > The build system for singleplayer devs
 
-**WARNING: PROJECT IS NOT READY FOR USE YET. Please note that some of these options don't work yet**
+**WARNING: CROSS COMPILATION IS CURENTLY BROKEN. WE ARE WORKING ON IT*
 
 ## About
 The goal of this project is to help little teams and solo devs configuring a multiplatform dev environment in a [WORA](https://en.wikipedia.org/wiki/Write_once,_run_anywhere) fashion.

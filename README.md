@@ -12,6 +12,16 @@ spbuild build [OPTIONS]
 Here are some available options:
 - `-s`, `--solution-path`: Path to the project config file (If folder passed, defaults to spbuild.json)
 
+## Compilation requirements
+### Linux
+The default compiler for linux is GCC so you will need to install cross-compilers if you want to compile for other platforms.
+- For Windows targets, install `mingw-w64` (on Arch, `sudo yay -S mingw-w64`)
+- For MacOS targets, cross compilation requires a bit more work and `osxcross`. Follow the instructions on their [GitHub page](https://github.com/tpoechtrager/osxcross) for gcc
+
+If you also want to target different architectures, you will need to install the appropriate cross-compilers.
+- For ARM targets, install `aarch64-linux-gnu-gcc` (on Arch, `sudo yay -S aarch64-linux-gnu-gcc`)
+- For 32-bit targets, install `gcc-multilib` and `gcc-libc` (on Arch, `sudo pacman -S lib32-gcc-libc lib32-glibc`)
+- For RISC-V targets, install `riscv64-elf-gcc` (on Arch, `sudo yay -S riscv64-elf-gcc`)
 
 ## Naming
 - Project : A single target for the compiler (executable, library, etc.)
@@ -38,7 +48,7 @@ Here are some available options:
 - `target_platforms`: List of target platforms. Can be any of the following:
   - `windows`: Microsoft Windows
   - `linux`: Linux-based operating systems
-  - `macos`: Apple's MacOS
+  - `macos-25.2`: Apple's MacOS with Kernel version 25.2 (Needs additional configuration with osxcross)
 - `path`: The path to the project folder (relative to the solution root)
 - `dependencies`: List of other projects that this project depends on (by name). If a dependency is not found in
     the solution, spbuild will look for it in the package manager (not implemented yet)
@@ -65,13 +75,16 @@ Here are some available options:
 - [ ] Dependency and package manager (definitely)
 
 ## Road to 1.0
-- 0.2: Simple GCC.. Set the groundwork <- Latest
-  - 0.2.1: Fix strange documentation, add a bit more error handling
-- 0.3: Cross compilation support, target architectures, target platforms
+- 0.2: Simple GCC.. Set the groundwork 
+  - 0.2.1: Fix strange documentation, add a bit more error handling <- Latest
+- 0.3: Cross compilation support, target architectures, target platforms <- Dev branch
 - 0.4: More compiler support (Clang, MSVC) <- First Prerelease
 - 0.5: Incremental build support
 - 0.6: Cleanup, refactor, documentation
 - 0.7: Package manager and external dependencies
 - 0.8: Testing, bug fixing...
 - 0.9: Final Polish, prepare for release
+
 - 1.0: Release!
+
+

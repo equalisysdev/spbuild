@@ -70,7 +70,7 @@ If you also want to target different architectures, you will need to install the
     - [x] Link
     - [x] Multi project solution
     - [x] Link
-    - [ ] Cross compile (Linux -> Windows)
+    - [x] Cross compile (Linux -> Windows)
 - [ ] Incremental build support
 - [ ] Dependency and package manager (definitely)
 
@@ -86,5 +86,6 @@ If you also want to target different architectures, you will need to install the
 - 0.9: Final Polish, prepare for release
 
 - 1.0: Release!
+
 
 

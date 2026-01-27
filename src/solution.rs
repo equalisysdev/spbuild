@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use clap::ValueEnum;
 use serde::Deserialize;
 use crate::target::{Architecture, Platform};
 

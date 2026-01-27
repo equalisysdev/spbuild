@@ -10,7 +10,6 @@ use crate::helpers::console::Console;
 use crate::helpers::file_tools::*;
 
 use crate::solution::{Project, ProjectType, Solution};
-use crate::target::{Architecture, Platform};
 
 
 pub struct GccCompiler {
@@ -28,20 +27,15 @@ impl GccCompiler {
     pub fn new(t_arch: String, t_platform: String) -> Self {
         let target_spec = format!("{}-{}", t_arch, t_platform);
         let bin_path = Path::new("/usr/bin");
-        let mut gcc_path = bin_path.join(format!("{target_spec}-gcc"));
+        let gcc_path = bin_path.join(format!("{target_spec}-gcc"));
         let gpp_path = bin_path.join(format!("{target_spec}-g++"));
-        let mut ld_path: PathBuf = bin_path.to_path_buf();
-
-        if t_platform == "windows" {
-            ld_path = bin_path.join(format!("{}-ld", target_spec));
+        let ld_path: PathBuf = if t_platform == "w64-mingw32" {
+            bin_path.join(format!("{}-ld", target_spec))
         } else {
-            ld_path = bin_path.join("ld");
-        }
+            bin_path.join("ld")
+        };
 
-        let mut is32bit = false;
-        if t_arch == "i386" || t_arch == "i486" || t_arch == "i586" || t_arch == "i686" || t_arch == "x86" {
-            is32bit = true;
-        }
+        let is32bit = t_arch == "i386" || t_arch == "i486" || t_arch == "i586" || t_arch == "i686" || t_arch == "x86";
 
         GccCompiler {
             gcc_path: gcc_path.to_str().unwrap_or("/usr/bin/gcc").to_string(),
@@ -266,11 +260,8 @@ impl Compiler for GccCompiler {
         let output_executable = abs_project_output_path.join(&project.name);
         Console::log_info(&format!("Linking executable: {}", output_executable.display()));
 
-        let mut command = Command::new(&self.ld_path);
-
-        command.arg("-r");
-        command.arg("-b");
-        command.arg("binary");
+        // Use the C++ compiler driver for linking so that startup code and standard libraries are included.
+        let mut command = Command::new(&self.gpp_path);
 
         // Adds object files to the linker command
         command.current_dir(&abs_project_output_path);

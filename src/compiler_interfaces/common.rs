@@ -1,7 +1,6 @@
 use std::path::{Path, PathBuf};
 
 use crate::solution::{Project, Solution};
-use crate::target::{Architecture, Platform};
 
 // TRAITS DEFINITIONS
 pub trait Compiler {

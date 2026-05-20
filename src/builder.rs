@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 
 use cc;
-
+use crate::linker::Linker;
 use crate::structs::target::{Architecture, Platform};
 
 pub enum StdVersion {
@@ -11,7 +11,7 @@ pub enum StdVersion {
     CPP20,
 }
 
-pub struct Compiler {
+pub struct Builder {
     additional_include_paths: Vec<PathBuf>,
     files: Vec<PathBuf>,
     defines: HashMap<String, String>,
@@ -26,12 +26,14 @@ pub struct Compiler {
     host_arch: Architecture,
     host_platform: Platform,
 
-    builder: cc::Build
+    compiler: cc::Build,
+    linker: Linker
 }
 
-impl Compiler {
-    pub fn new(target: String, host_arch: Architecture, host_platform: Platform) -> Self {
-        Compiler
+impl Builder {
+
+    pub fn new(target: &str, host_arch: Architecture, host_platform: Platform) -> Self {
+        Builder
         {
             additional_include_paths: vec![],
             files: vec![],
@@ -40,11 +42,12 @@ impl Compiler {
             warning_level: 1, // Default
             flags: vec![],
             env_vars: HashMap::new(),
-            target_str: target,
+            target_str: target.to_string(),
             host_arch,
             host_platform,
 
-            builder: cc::Build::new()
+            compiler: cc::Build::new(),
+            linker: Linker::new(&target)
         }
     }
 
@@ -112,7 +115,7 @@ impl Compiler {
     /// Compiles files into intermediary files. Doesn't link them
     pub fn compile(&mut self, output_path: &Path) {
 
-        self.builder
+        self.compiler
             .target(&self.target_str)
             .flags(&self.flags)
             .files(&self.files)
@@ -120,27 +123,27 @@ impl Compiler {
             .out_dir(output_path.canonicalize().unwrap());
 
         for var in &self.env_vars {
-            self.builder.env(var.0, var.1);
+            self.compiler.env(var.0, var.1);
         }
 
         for define in &self.defines {
-            self.builder.define(&define.0, Some(define.1.as_str()));
+            self.compiler.define(&define.0, Some(define.1.as_str()));
         }
 
         match self.warning_level {
             0 => {
-                self.builder.warnings(false);
+                self.compiler.warnings(false);
             },
             1 => {
-                self.builder.warnings(true);
+                self.compiler.warnings(true);
             },
             2 => {
-                self.builder.extra_warnings(true);
+                self.compiler.extra_warnings(true);
             },
             3 => {
-                self.builder.warnings(true);
-                self.builder.extra_warnings(true);
-                self.builder.warnings_into_errors(true);
+                self.compiler.warnings(true);
+                self.compiler.extra_warnings(true);
+                self.compiler.warnings_into_errors(true);
             },
             _ => {
                 panic!("Invalid warning level: {}", self.warning_level);
@@ -149,21 +152,21 @@ impl Compiler {
 
         match self.std_version {
             StdVersion::CPP20 => {
-                self.builder.cpp(true);
-                self.builder.std("c++20");
+                self.compiler.cpp(true);
+                self.compiler.std("c++20");
             },
             StdVersion::CPP17 => {
-                self.builder.cpp(true);
-                self.builder.std("c++17");
+                self.compiler.cpp(true);
+                self.compiler.std("c++17");
             },
             StdVersion::CPP14 => {
-                self.builder.cpp(true);
-                self.builder.std("c++14");
+                self.compiler.cpp(true);
+                self.compiler.std("c++14");
             },
         }
 
         // compiles the thing into a single file
-        self.builder.compile_intermediates();
+        self.compiler.compile_intermediates();
     }
 
     /// Links the intermediary files into a final executable or library

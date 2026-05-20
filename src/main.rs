@@ -1,7 +1,20 @@
 mod config_parser;
-mod compiler;
+mod builder;
+mod linker;
+mod linker_backends {
+    pub mod common {
+        include!("linker_backends/common.rs");
+    }
 
-mod structs {
+    pub mod gnu_backend;
+    pub mod llvmelf_backend;
+    pub mod msvc_backend;
+    pub mod llvmmsvc_backend;
+    pub mod apple_backend;
+
+}
+
+pub mod structs {
     pub mod target {
         include!("structs/target.rs");
     }
@@ -11,7 +24,7 @@ mod structs {
     }
 }
 
-mod helpers {
+pub mod helpers {
     pub mod console {
         include!("helpers/console.rs");
     }

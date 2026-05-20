@@ -1,16 +1,13 @@
-mod solution;
 mod config_parser;
-mod target;
+mod compiler;
 
-mod compiler_interfaces {
-    pub mod common {
-        include!("compiler_interfaces/common.rs");
+mod structs {
+    pub mod target {
+        include!("structs/target.rs");
     }
-    pub mod msvc {
-        include!("compiler_interfaces/msvc.rs");
-    }
-    pub mod gcc {
-        include!("compiler_interfaces/gcc.rs");
+
+    pub mod solution {
+        include!("structs/solution.rs");
     }
 }
 
@@ -43,13 +40,11 @@ use crate::helpers::console::Console;
 use crate::config_parser::{parse_config};
 
 // Compilation helpers
-use crate::compiler_interfaces::common::Compiler;
-use crate::compiler_interfaces::gcc::GccCompiler;
 use crate::dependency_manager::local_resolve::{has_circular_dependency, resolve_project_build_inputs};
 
 // Structs
-use crate::solution::{ProjectType, Solution};
-use crate::target::{Architecture, Platform};
+use crate::structs::solution::{ProjectType, Solution};
+use crate::structs::target::{Architecture, Platform};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None, disable_version_flag = true)]
@@ -126,151 +121,6 @@ fn config_file_check(config_path: &PathBuf) -> Result<PathBuf, String> {
 }
 
 
-//noinspection D
-fn linux_build(args: Args, config_path: PathBuf, solution: Solution, target_arch: Architecture, target_platform: Platform) -> Result<(), ()> {
-    let working_dir = config_path
-        .parent()
-        .expect("Config path has no parent")
-        .to_path_buf();
-
-    Console::log_success(format!("Successfully parsed solution: {}", solution.name).as_str());
-
-// ===== PRE BUILD =====
-
-    // Track what we've already compiled to avoid rebuilding the same dependency multiple times.
-    let mut compiled_projects: Vec<String> = Vec::new();
-
-
-    // Validate that all projects support the target architecture and platform before starting the build.
-    for project in &solution.projects {
-        // Check if the project supports the target architecture, platform..
-        if !project.target_archs.contains(&target_arch) {
-            Console::log_fatal(format!("Project {}: does not support target architecture {:?}", project.name, target_arch).as_str());
-            return Err(());
-        }
-        if !project.target_platforms.contains(&target_platform) {
-            Console::log_fatal(format!("Project {}: does not support target platform {:?}", project.name, target_platform).as_str());
-            return Err(());
-        }
-    }
-
-// ===== BUILD =====
-
-    // Compiles each project (but checks which ones are compiled tho)
-    for project in &solution.projects {
-
-    // ===== COMPILATION  =====
-
-        // Creates compiler for particular target
-        let compiler = GccCompiler::new(target_arch.to_gcc_target_arch(), target_platform.to_gcc_target_platform());
-
-        // Resolve dependencies and include dirs.
-        let inputs = match resolve_project_build_inputs(project, &solution, &working_dir, args.verbose) {
-            Ok(v) => v,
-            Err(e) => {
-                Console::log_fatal(format!("Error resolving dependencies: {}", e).as_str());
-                return Err(());
-            }
-        };
-
-        // Build local deps first.
-        for dep in &inputs.local_deps_in_order {
-            if compiled_projects.iter().any(|n| n == &dep.name) {
-                continue;
-            }
-
-            let res = compiler.compile_project(
-                dep,
-                &working_dir,
-                Vec::new(),
-                args.verbose,
-            );
-
-            if let Err(e) = res {
-                Console::log_fatal(format!("Error compiling dependency {}: {}", dep.name, e).as_str());
-                return Err(());
-            }
-
-        // ===== LINKING  =====
-            //TODO: [URGENT] Implement the additional_static_libs setting in the config for linking
-
-            let res = compiler.link_project(
-                dep,
-                &solution,
-                &working_dir,
-                Vec::new(),
-                args.verbose,
-            );
-
-            if let Err(e) = res {
-                Console::log_fatal(format!("Error linking dependency {}: {}\n", dep.name, e).as_str());
-                return Err(());
-            }
-
-            compiled_projects.push(dep.name.clone());
-        }
-
-        // Compile current project with resolved include dirs.
-        let res = compiler.compile_project(
-            &project,
-            &working_dir,
-            inputs.include_dirs.clone(),
-            args.verbose,
-        );
-
-        if let Err(e) = res {
-            Console::log_fatal(format!("Error compiling project: {}", e).as_str());
-            return Err(());
-        } else {
-            Console::log_success("=== Project compiled successfully ===");
-        }
-
-        // Link current project.
-        let mut link_inputs = inputs.dep_output_dirs.clone();
-        // Keep the project's include dirs around as well in case the linker needs them later (e.g. for -L/-l).
-        // For now, gcc.rs interprets these as directories to scan for `.o` files.
-        link_inputs.extend(inputs.include_dirs.clone());
-
-        let res = compiler.link_project(
-            &project,
-            &solution,
-            &working_dir,
-            link_inputs,
-            args.verbose,
-        );
-
-        if let Err(e) = res {
-            Console::log_fatal(format!("Error linking project: {}\n", e).as_str());
-            return Err(());
-        } else {
-            Console::log_success("=== Project linked successfully ===");
-        }
-
-        // DLL resolution for windows targets
-        if target_platform == Platform::Win && project.project_type == ProjectType::Executable {
-
-            let gcc_target_arch = target_arch.to_gcc_target_arch();
-            let gcc_target_platform = target_platform.to_gcc_target_platform();
-
-            let abs_project_output_path = &working_dir
-                .join("output")
-                .join(format!("{}-{}", gcc_target_platform, gcc_target_arch)) // Target-specific output folder
-                .join(&project.path);
-
-            abs_project_output_path
-                .canonicalize()
-                .map_err(|_| {"Project Output Path not found"}).unwrap();
-            let abs_exe_path = abs_project_output_path.join(&project.name).with_extension("exe");
-
-            GccCompiler::resolve_dlls(&abs_exe_path, &args.verbose)
-        }
-
-        compiled_projects.push(project.name.clone());
-    }
-    Console::log_info("\n= BUILD COMPLETE =\n");
-    Ok(())
-}
-
 
 fn print_version_and_exit() {
     const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -282,6 +132,13 @@ fn print_version_and_exit() {
     Console::log_info(format!("{}\n", DESCRIPTION).as_str());
     Console::log_info(format!("More info at: {}", HOMEPAGE).as_str());
     std::process::exit(0);
+}
+
+fn print_version_header() {
+    const VERSION: &str = env!("CARGO_PKG_VERSION");
+    const NAME: &str = env!("CARGO_PKG_NAME");
+
+    Console::log_info(format!("{} version: {}\n", NAME, VERSION).as_str());
 }
 
 fn main() {
@@ -373,20 +230,6 @@ fn main() {
         if has_circular_dependency(&project, &config, &mut Vec::new()) {
             Console::log_fatal(format!("Circular dependency detected in project: {}", project.name).as_str());
             Console::log_fatal("==== Aborting build ====");
-            return;
-        }
-    }
-
-    if current_platform_str == "windows" {
-        Console::log_fatal("Windows platform detected. MSVC support is not yet implemented.");
-        Console::log_fatal("==== Aborting build ====");
-        //TODO : Call msvc functions
-    }
-
-    else if current_platform_str == "linux" {
-
-        if linux_build(args, config_path, config, target_architecture, target_platform).is_err(){
-            Console::log_fatal("==== Build failed ====");
             return;
         }
     }

@@ -1,6 +1,6 @@
 use std::fs::create_dir_all;
 use std::path::PathBuf;
-use crate::solution::{Project, Solution};
+use crate::structs::solution::{Project, Solution};
 use crate::Console;
 use crate::helpers::version_tools::version_check;
 

@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::fs::read_to_string;
 
-use crate::solution::Solution;
+use crate::structs::solution::Solution;
 
 pub fn parse_config(path: &Path) -> Result<Solution, String> {
 

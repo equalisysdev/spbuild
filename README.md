@@ -47,16 +47,8 @@ If you also want to target different architectures, you will need to install the
   - `Executable`: A standalone application
   - `StaticLib`: A static library that can be linked to other projects
   - `DynamicLib`: A dynamic library (like DLLs on Windows)
-- `target_archs`: List of target architectures. Can be any of the following:
-  - `x86_64`: 64-bit architecture
-  - `x86`: 32-bit architecture
-  - `aarch64`: ARM 64-bit architecture
-  - `arm`: ARM 32-bit architecture
-  - `riscv64`: RISC-V 64-bit architecture
-- `target_platforms`: List of target platforms. Can be any of the following:
-  - `win`: Microsoft Windows
-  - `linux`: Linux-based operating systems
-  - `macos-25.2`: Apple's MacOS with Kernel version 25.2 (Needs additional configuration with osxcross)
+- `targets`: All the targets the project can compile to. Check out the `PossibleTargets.md` file to know all the
+    possible values for this field
 - `path`: The path to the project folder (relative to the solution root)
 - `dependencies`: List of other projects that this project depends on (by name). If a dependency is not found in
     the solution, spbuild will look for it in the package manager (not implemented yet)
@@ -93,18 +85,19 @@ python <path_to_cpdll.py> <path_to_exe>
 - [ ] Dependency and package manager (definitely)
 
 ## Road to 1.0
-- 0.2: Simple GCC.. Set the groundwork 
+- 0.2.0: Simple GCC.. Set the groundwork 
   - 0.2.1: Fix strange documentation, add a bit more error handling 
-- 0.3: Cross compilation support, target architectures, target platforms 
+- 0.3.0: Cross compilation support, target architectures, target platforms 
   - 0.3.1: Bugfixes 
   - 0.3.2: Better dependencies (.dll, .so, .dylib, .lib handling) <- Cargo publishing <- Latest <- Dev branch
-- 0.4: More compiler support (Clang, MSVC)
-  - 0.4.1: CLI Rework (`spbuild build`, `spbuild init`...) <- First Prerelease
-- 0.5: Incremental build support
-- 0.6: Cleanup, refactor, documentation
-- 0.7: Package manager and external dependencies
-- 0.8: Testing, bug fixing...
-- 0.9: Final Polish, prepare for release
+- 0.4.0: Switch to cc crate
+  - 0.4.1: More compiler support (Clang, MSVC)
+  - 0.4.2: CLI Rework (`spbuild build`, `spbuild init`...) <- First Prerelease
+- 0.5.0: Incremental build support
+- 0.6.0: Cleanup, refactor, documentation
+- 0.7.0: Package manager and external dependencies
+- 0.8.0: Testing, bug fixing...
+- 0.9.0: Final Polish, prepare for release
 
 - 1.0: Release!
 

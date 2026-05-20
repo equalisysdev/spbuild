@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use serde::Deserialize;
-use crate::target::{Architecture, Platform};
+use crate::structs::target::{Architecture, Platform};
 
 #[derive(Deserialize)]
 pub struct Solution {

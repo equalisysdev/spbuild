@@ -32,12 +32,13 @@ pub mod dependency_manager {
 }
 
 use std::env;
+use std::ffi::OsStr;
 use std::path::PathBuf;
 use clap::Parser;
 
 // Basic helpers
 use crate::helpers::console::Console;
-use crate::config_parser::{parse_config};
+use crate::config_parser::{parse_json_config};
 
 // Compilation helpers
 use crate::dependency_manager::local_resolve::{has_circular_dependency, resolve_project_build_inputs};
@@ -161,10 +162,29 @@ fn main() {
         }
     };
 
-    let config = parse_config(&config_path).map_err(|e| {
-        Console::log_fatal(format!("Failed to parse config: {}", e).as_str());
+    let config: Solution;
+
+    // json config file support
+    if config_path.extension().and_then(OsStr::to_str) == Some("json") {
+        config = parse_json_config(&config_path).map_err(|e| {
+            Console::log_fatal(format!("Failed to parse config: {}", e).as_str());
+            Console::log_fatal("==== Aborting build ====");
+        }).unwrap();
+
+    // yaml config file support
+    } else if config_path.extension().and_then(OsStr::to_str) == Some("yaml") || config_path.extension().and_then(OsStr::to_str) == Some("yml") {
+        config = config_parser::parse_yaml_config(&config_path).map_err(|e| {
+            Console::log_fatal(format!("Failed to parse config: {}", e).as_str());
+            Console::log_fatal("==== Aborting build ====");
+        }).unwrap();
+    } else {
+
+    // Unsupported config file format
+        Console::log_fatal(format!("Unsupported configuration file format: {}", config_path.display()).as_str());
+        Console::log_fatal("Supported formats are .json, .yaml, and .yml");
         Console::log_fatal("==== Aborting build ====");
-    }).unwrap();
+        std::process::exit(1);
+    }
 
 
     Console::log_info("Detecting platform and architecture... ");

@@ -23,3 +23,4 @@ strum_macros = "0.28.0"
 target-lexicon = { version = "0.13.5", features = ["serde"] }
 which = "8.0.2"
 twox-hash = "2.1.2"
+serde-saphyr = "0.0.26"

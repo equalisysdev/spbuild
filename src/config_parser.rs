@@ -3,7 +3,7 @@ use std::fs::read_to_string;
 
 use crate::structs::solution::Solution;
 
-pub fn parse_config(path: &Path) -> Result<Solution, String> {
+pub fn parse_json_config(path: &Path) -> Result<Solution, String> {
 
     let unserialized_string = read_to_string(path);
 
@@ -17,6 +17,16 @@ pub fn parse_config(path: &Path) -> Result<Solution, String> {
         .map_err(|e| format!("Failed to read config file `{}': {}", path.display(), e))?;
 
     let solution: Solution = serde_json::from_str(&contents)
+        .map_err(|e| format!("Failed to parse config file `{}': {}", path.display(), e))?;
+
+    Ok(solution)
+}
+
+pub fn parse_yaml_config(path: &Path) -> Result<Solution, String> {
+    let contents = read_to_string(path)
+        .map_err(|e| format!("Failed to read config file `{}': {}", path.display(), e))?;
+
+    let solution = serde_saphyr::from_str(&contents)
         .map_err(|e| format!("Failed to parse config file `{}': {}", path.display(), e))?;
 
     Ok(solution)
